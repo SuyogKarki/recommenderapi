@@ -7,6 +7,7 @@ import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from Input import Input
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 
 
@@ -19,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = joblib.load('pred-model')
+model = joblib.load('pred_model')
 
 path = 'books.csv'
 df = pd.read_csv(path, error_bad_lines=False)
@@ -39,7 +40,8 @@ features = pd.concat([rating_df,
                       language_df, 
                       df2['average_rating'], 
                       df2['ratings_count']], axis=1)
-
+min_max_scaler = MinMaxScaler()
+features = min_max_scaler.fit_transform(features)
 
 dist, idlist = model.kneighbors(features)
 
@@ -79,9 +81,8 @@ async def root():
 def predict(data: Input):
     data = data.dict()
     name=data['name']
-
     booknames = BookRecommender(name)
-    return booknames 
+    return (booknames) 
 
 
 if __name__ == '__main__':
